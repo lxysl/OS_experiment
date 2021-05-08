@@ -15,10 +15,7 @@ class PCBQueue:
     def append(self, pcb: PCB):
         self.__pcbList.append(pcb)
 
-    # def getSortedList(self):
-    #     # 返回按优先级降序排序的未终止进程(PID:priority)元组列表
-    #     PIDDic = {}
-    #     for i in self.__pcbList:
-    #         if i.getState() != PCBState.EXIT:
-    #             PIDDic[i.getPID()] = i.getPriority()
-    #     return sorted(PIDDic.items(), key=lambda item: item[1], reverse=True)
+    def setPCBSuccessor(self, pcb: PCB):
+        for i in pcb.getPrecursor():
+            prePCB = self.getPCBByPID(i)
+            prePCB.addSuccsesor(pcb.getPID())

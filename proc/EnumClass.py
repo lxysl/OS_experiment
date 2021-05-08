@@ -15,7 +15,7 @@ class Property(Enum):
     SYNCHRONIZED = 1
 
 
-class PartitionState(Enum):
+class MemoryBlockState(Enum):
     UNASSIGNED = 0
     ASSIGNED = 1
     OS_ASSIGNED = 2
