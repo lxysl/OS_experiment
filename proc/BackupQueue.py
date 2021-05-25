@@ -1,4 +1,4 @@
-from EnumClass import PCBState, Property
+from proc.EnumClass import PCBState, Property
 from proc.PCB import PCB
 from proc.PCBQueue import PCBQueue
 from proc.MainMemory import MainMemory
@@ -8,7 +8,7 @@ class BackupQueue:
     def __init__(self):
         self.__backupList = []
 
-    def backupPCB(self, pcb: PCB):
+    def appendPCB(self, pcb: PCB):
         self.__backupList.append(pcb.getPID())
         pcb.setState(PCBState.STATIC_READY)
 
@@ -24,7 +24,7 @@ class BackupQueue:
                 if isAssignable:
                     memory.insertPCB(pcb, partitionNum)
                     self.__backupList.pop(pid)
-                    pcb.setState(PCBState.ACTIVE_READY)
+                    # pcb.setState(PCBState.ACTIVE_READY)
             else:
                 # 同步进程
                 precursorList = pcb.getPrecursor()
@@ -35,7 +35,7 @@ class BackupQueue:
                     if isAssignable:
                         memory.insertPCB(pcb, partitionNum)
                         self.__backupList.pop(pid)
-                        pcb.setState(PCBState.ACTIVE_READY)
+                        # pcb.setState(PCBState.ACTIVE_READY)
 
-    def removeHangingPCB(self, pcb: PCB):
-        pass
+    def removePCB(self, pcb: PCB):
+        self.__backupList.remove(pcb.getPID())

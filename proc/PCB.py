@@ -14,6 +14,18 @@ class PCB:
         self.__precursor = precursor  # 前驱进程PID
         self.__successor = set()  # 后继进程PID集合
 
+    def toJson(self):
+        return {
+            'pid': self.__pid,
+            'time': self.__time,
+            'ram': self.__ram,
+            'priority': self.__priority,
+            'state': self.__state.name,
+            'property': self.__prop.name,
+            'precursor': list(self.__precursor),
+            'successor': list(self.__successor)
+        }
+
     def getPID(self):
         return self.__pid
 
@@ -39,6 +51,8 @@ class PCB:
         self.__state = new_state
 
     def addSuccessor(self, pid: int):
+        if self.__prop == Property.INDEPENDENT:
+            self.__prop = Property.SYNCHRONIZED
         self.__successor.add(pid)
 
     # def addSuccessor(self, successor: set):
@@ -48,8 +62,8 @@ class PCB:
     def process(self):
         self.__time -= 1
         if self.__time == 0:
-            self.__state = PCBState.EXIT
+            self.setState(PCBState.EXIT)
             return True  # 进程结束
         else:
-            self.__state = PCBState.RUNNING
+            self.setState(PCBState.RUNNING)
             return False

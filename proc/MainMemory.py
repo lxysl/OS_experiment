@@ -13,6 +13,18 @@ class MainMemory:
                          [OSMemory, Memory - OSMemory, MemoryBlockState.UNASSIGNED]]
         self.__memoryPCB = [-1, -2]  # 内存分区表中对应存储的PID，OS对应的内存表项用-1表示，未分配内存表项用-2表示
 
+    def toJson(self):
+        jsonList = []
+        for index, memoryBlock in enumerate(self.__memory):
+            block = {
+                'start': memoryBlock[0],
+                'length': memoryBlock[1],
+                'memory_state': memoryBlock[2].name,
+                'memory_PCB': self.__memoryPCB[index]
+            }
+            jsonList.append(block)
+        return {'main_memory': jsonList}
+
     def checkAssignable(self, pcb: PCB):
         # 检测是否可分配空间，同时返回可分配内存空间的起始地址
         for index, memoryBlock in enumerate(self.__memory):
@@ -26,12 +38,13 @@ class MainMemory:
         pcb_ram = pcb.getRam()
         pcb_id = pcb.getPID()
         self.__readyList.append(pcb_id)
+        pcb.setState(PCBState.ACTIVE_READY)
         if partition[1] == pcb_ram:
             # 内存长度正好相等
             partition[2] = MemoryBlockState.ASSIGNED
             self.__memoryPCB[memoryBlockNum] = pcb_id
         else:
-            self.__memory.insert(memoryBlockNum,
+            self.__memory.insert(memoryBlockNum + 1,
                                  [partition[0] + pcb_ram, partition[1] - pcb_ram, MemoryBlockState.UNASSIGNED])
             self.__memoryPCB.insert(memoryBlockNum, pcb_id)
             partition[1] = pcb_ram
