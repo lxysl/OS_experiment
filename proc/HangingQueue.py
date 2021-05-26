@@ -8,6 +8,12 @@ class HangingQueue:
     def __init__(self):
         self.__hangingList = []
 
+    def toJson(self):
+        jsonList = []
+        for pid in self.__hangingList:
+            jsonList.append({'pid': pid})
+        return {'hanging_queue': jsonList}
+
     def appendPCB(self, pcb: PCB):
         self.__hangingList.append(pcb.getPID())
         pcb.setState(PCBState.SUSPENDING)

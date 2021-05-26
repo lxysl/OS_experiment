@@ -9,6 +9,15 @@ class Processor:
         self.__processorNum = ProcessorNum  # 处理机个数
         self.__processorPCBList = [[] for _ in range(self.__processorNum)]  # 每个处理机上待处理的进程PID列表
 
+    def toJson(self):
+        jsonList = []
+        for index, processor in enumerate(self.__processorPCBList):
+            jsonList.append({
+                'id': '处理机' + str(index),
+                'pid_list': [{'pid': pid} for pid in self.__processorPCBList[index]]
+            })
+        return {'processors': jsonList}
+
     def process(self, pcb_list: PCBQueue):
         # 每个处理机执行一个单位时间的进程任务，更新每个处理机的进程所需时间
         for i in range(self.__processorNum):

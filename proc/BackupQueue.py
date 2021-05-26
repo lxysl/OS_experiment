@@ -8,6 +8,12 @@ class BackupQueue:
     def __init__(self):
         self.__backupList = []
 
+    def toJson(self):
+        jsonList = []
+        for pid in self.__backupList:
+            jsonList.append({'pid': pid})
+        return {'backup_queue': jsonList}
+
     def appendPCB(self, pcb: PCB):
         self.__backupList.append(pcb.getPID())
         pcb.setState(PCBState.STATIC_READY)
@@ -24,18 +30,19 @@ class BackupQueue:
                 if isAssignable:
                     memory.insertPCB(pcb, partitionNum)
                     self.__backupList.pop(pid)
-                    # pcb.setState(PCBState.ACTIVE_READY)
+                    return pcb.getPID()
             else:
                 # 同步进程
                 precursorList = pcb.getPrecursor()
                 preExitList = [pcb_queue.getPCBByPID(i).getState() == PCBState.EXIT for i in precursorList]
                 if sum(preExitList) == len(preExitList):
-                    # 前驱进程全部完成
+                    # preExitList中全部为True，前驱进程全部完成
                     isAssignable, partitionNum = memory.checkAssignable(pcb)
                     if isAssignable:
                         memory.insertPCB(pcb, partitionNum)
                         self.__backupList.pop(pid)
-                        # pcb.setState(PCBState.ACTIVE_READY)
+                        return pcb.getPID()
+        return -1   # 无进程进入内存
 
     def removePCB(self, pcb: PCB):
         self.__backupList.remove(pcb.getPID())

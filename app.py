@@ -6,11 +6,6 @@ app = Flask(__name__)
 CORS(app)
 
 
-@app.route('/os')
-def index():
-    return render_template('index.html')
-
-
 @app.route('/os/get_PCB_list', methods=['GET'])
 def getPCBList():
     print(pcbQueue.toJson())
@@ -54,7 +49,47 @@ def createPCB():
 
 @app.route('/os/get_main_memory')
 def getMainMemory():
+    print(mainMemory.toJson())
     return mainMemory.toJson(), 200
+
+
+@app.route('/os/get_processors')
+def getProcessors():
+    print(processer.toJson())
+    return processer.toJson(), 200
+
+
+@app.route('/os/get_backup_queue')
+def getBackupQueue():
+    print(backupQueue.toJson())
+    return backupQueue.toJson(), 200
+
+
+@app.route('/os/get_hanging_queue')
+def getHangingQueue():
+    print(hangingQueue.toJson())
+    return hangingQueue.toJson(), 200
+
+
+@app.route('/os/hang_PCB_list', methods=['POST'])
+def hangPCB():
+    form = request.get_json(silent=True)
+    print(form)
+    hangPCBList = form['form']
+    for pid in hangPCBList:
+        hangingQueue.appendPCB(pcbQueue.getPCBByPID(pid))
+    return pcbQueue.toJson(), 200
+
+
+@app.route('/os/unhang_PCB_list', methods=['POST'])
+def unhangPCB():
+    form = request.get_json(silent=True)
+    print(form)
+    unhangPCBList = form['form']
+    for pid in unhangPCBList:
+        hangingQueue.removePCB(pcbQueue.getPCBByPID(pid))
+    # TODO：对解挂后的进程进行处理
+    return pcbQueue.toJson(), 200
 
 
 @app.route('/os/run')

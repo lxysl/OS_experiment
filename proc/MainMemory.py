@@ -1,5 +1,5 @@
 from proc.Config import Memory, OSMemory
-from proc.EnumClass import PCBState, MemoryBlockState
+from proc.EnumClass import PCBState, MemoryBlockState, Property
 from proc.PCB import PCB
 from proc.PCBQueue import PCBQueue
 from proc.Processer import Processor
@@ -16,13 +16,12 @@ class MainMemory:
     def toJson(self):
         jsonList = []
         for index, memoryBlock in enumerate(self.__memory):
-            block = {
+            jsonList.append({
                 'start': memoryBlock[0],
                 'length': memoryBlock[1],
                 'memory_state': memoryBlock[2].name,
                 'memory_PCB': self.__memoryPCB[index]
-            }
-            jsonList.append(block)
+            })
         return {'main_memory': jsonList}
 
     def checkAssignable(self, pcb: PCB):
@@ -92,6 +91,26 @@ class MainMemory:
 
     def dispatchProcessor(self, pcb_queue: PCBQueue, processor: Processor):
         # 对内存空间中（处于就绪队列中）的进程按抢占式优先权调度算法安排调度
-        PIDDic = {i: pcb_queue.getPCBByPID(i).getPriority() for i in self.__readyList}
-        sortedList = sorted(PIDDic.items(), key=lambda item: item[1], reverse=True)  # 按优先权降序排序
+        # 首先将独立进程，以及前驱已经完成的同步进程按优先权降序加入列表
+        # 然后将同步进程按优先权降序加入列表
+        # 最后为进程分配处理机
+        freePIDDic = {}  # 独立进程，以及前驱已经完成的同步进程
+        syncPIDDic = {}  # 同步进程
+        for i in self.__readyList:
+            pcb = pcb_queue.getPCBByPID(i)
+            if pcb.getProperty() == Property.INDEPENDENT:
+                # 独立进程
+                freePIDDic[i] = pcb.getPriority()
+            else:
+                precursorList = pcb.getPrecursor()
+                preExitList = [pcb_queue.getPCBByPID(i).getState() == PCBState.EXIT for i in precursorList]
+                if sum(preExitList) == len(preExitList):
+                    # preExitList中全部为True，前驱进程全部完成
+                    freePIDDic[i] = pcb.getPriority()
+                else:
+                    # 同步进程
+                    syncPIDDic[i] = pcb.getPriority()
+        sortedFreeList = sorted(freePIDDic.items(), key=lambda item: item[1], reverse=True)  # 按优先权降序排序
+        sortedSyncList = sorted(syncPIDDic.items(), key=lambda item: item[1], reverse=True)  # 按优先权降序排序
+        sortedList = sortedFreeList + sortedSyncList
         processor.dispatchPCB(sortedList)

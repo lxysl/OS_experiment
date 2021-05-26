@@ -51,13 +51,10 @@ class PCB:
         self.__state = new_state
 
     def addSuccessor(self, pid: int):
-        if self.__prop == Property.INDEPENDENT:
-            self.__prop = Property.SYNCHRONIZED
+        # 有后继进程而无前驱进程的进程为独立进程（注释以下两行后）
+        # if self.__prop == Property.INDEPENDENT:
+        #     self.__prop = Property.SYNCHRONIZED
         self.__successor.add(pid)
-
-    # def addSuccessor(self, successor: set):
-    #     for i in successor:
-    #         self.__successor.add(i)
 
     def process(self):
         self.__time -= 1
