@@ -1,7 +1,5 @@
 from proc.EnumClass import PCBState
 from proc.PCB import PCB
-from proc.PCBQueue import PCBQueue
-from proc.MainMemory import MainMemory
 
 
 class HangingQueue:

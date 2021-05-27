@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request
 from proc import *
 from flask_cors import CORS
 
@@ -8,7 +8,7 @@ CORS(app)
 
 @app.route('/os/get_PCB_list', methods=['GET'])
 def getPCBList():
-    print(pcbQueue.toJson())
+    print('所有进程：' + str(pcbQueue.toJson()))
     return pcbQueue.toJson(), 200
 
 
@@ -16,7 +16,7 @@ def getPCBList():
 def createPCB():
     # 创建进程
     form = request.get_json(silent=True)
-    print(form)
+    print('创建进程表单：' + str(form))
     pid = pcbQueue.getNextPID()
     time = int(form['form']['time'])
     ram = int(form['form']['ram'])
@@ -29,7 +29,7 @@ def createPCB():
     elif prop_str == '1':
         prop = Property.SYNCHRONIZED
     else:
-        return {'errMsg': 'PCB进程创建错误'}, 400
+        return {'errMsg': 'PCB进程创建错误！'}, 400
     precursor = set(precursor_list)
     new_pcb = PCB(pid, time, ram, priority, prop, precursor)
     print('创建进程：' + str(new_pcb.toJson()))
@@ -41,7 +41,7 @@ def createPCB():
     if isAssignable:
         mainMemory.insertPCB(new_pcb, partitionNum)
         # 分配内存和处理机
-        mainMemory.dispatchProcessor(pcbQueue, processer)
+        mainMemory.dispatchProcessor(pcbQueue, processor)
     else:
         backupQueue.appendPCB(new_pcb)
     return pcbQueue.toJson(), 200
@@ -49,52 +49,77 @@ def createPCB():
 
 @app.route('/os/get_main_memory')
 def getMainMemory():
-    print(mainMemory.toJson())
+    print('内存：'+str(mainMemory.toJson()))
     return mainMemory.toJson(), 200
 
 
 @app.route('/os/get_processors')
 def getProcessors():
-    print(processer.toJson())
-    return processer.toJson(), 200
+    print('处理机：' + str(processor.toJson()))
+    return processor.toJson(), 200
 
 
 @app.route('/os/get_backup_queue')
 def getBackupQueue():
-    print(backupQueue.toJson())
+    print('后备队列：' + str(backupQueue.toJson()))
     return backupQueue.toJson(), 200
 
 
 @app.route('/os/get_hanging_queue')
 def getHangingQueue():
-    print(hangingQueue.toJson())
+    print('挂起队列：' + str(hangingQueue.toJson()))
     return hangingQueue.toJson(), 200
 
 
 @app.route('/os/hang_PCB_list', methods=['POST'])
 def hangPCB():
     form = request.get_json(silent=True)
-    print(form)
+    print('挂起进程表单：' + str(form))
     hangPCBList = form['form']
     for pid in hangPCBList:
-        hangingQueue.appendPCB(pcbQueue.getPCBByPID(pid))
+        pcb = pcbQueue.getPCBByPID(pid)
+        if pcb.getState() in [PCBState.ACTIVE_READY, PCBState.RUNNING]:
+            # 内存中
+            mainMemory.removePCB(pcb, processor)
+            mainMemory.dispatchProcessor(pcbQueue, processor)  # 分配内存和处理机
+        if pcb.getState() == PCBState.STATIC_READY:
+            # 后备队列中
+            backupQueue.removePCB(pcb)
+        hangingQueue.appendPCB(pcb)
+    print('所有进程：' + str(pcbQueue.toJson()))
     return pcbQueue.toJson(), 200
 
 
 @app.route('/os/unhang_PCB_list', methods=['POST'])
 def unhangPCB():
     form = request.get_json(silent=True)
-    print(form)
+    print('解挂进程表单：' + str(form))
     unhangPCBList = form['form']
     for pid in unhangPCBList:
-        hangingQueue.removePCB(pcbQueue.getPCBByPID(pid))
-    # TODO：对解挂后的进程进行处理
+        pcb = pcbQueue.getPCBByPID(pid)
+        assert pcb.getState() == PCBState.SUSPENDING, '非挂起进程无法解挂'
+        hangingQueue.removePCB(pcb)
+        # 检查内存空间，主存空间分配，决定进程状态（后备队列/进入内存）
+        isAssignable, partitionNum = mainMemory.checkAssignable(pcb)
+        if isAssignable:
+            mainMemory.insertPCB(pcb, partitionNum)
+            # 分配内存和处理机
+            mainMemory.dispatchProcessor(pcbQueue, processor)
+        else:
+            backupQueue.appendPCB(pcb)
+    print('所有进程：' + str(pcbQueue.toJson()))
     return pcbQueue.toJson(), 200
 
 
 @app.route('/os/run')
 def run():
-    pass
+    isProcessable = mainMemory.checkProcessable(pcbQueue, processor)
+    if not isProcessable:
+        return {'errMsg': '无可运行程序，请手动检查！'}, 400
+    mainMemory.process(pcbQueue, processor)
+    pid = backupQueue.autoRemove(pcbQueue, mainMemory, processor)
+    print('所有进程：' + str(pcbQueue.toJson()))
+    return pcbQueue.toJson(), 200
 
 
 if __name__ == '__main__':

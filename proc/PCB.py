@@ -57,7 +57,8 @@ class PCB:
         self.__successor.add(pid)
 
     def process(self):
-        self.__time -= 1
+        if self.__time > 0:
+            self.__time -= 1
         if self.__time == 0:
             self.setState(PCBState.EXIT)
             return True  # 进程结束
