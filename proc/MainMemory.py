@@ -1,5 +1,5 @@
 from proc.Config import Memory, OSMemory
-from proc.EnumClass import PCBState, MemoryBlockState, Property
+from proc.EnumClass import PCBState, MemoryBlockState, Property, MemoryBlockStateDict
 from proc.PCB import PCB
 from proc.PCBQueue import PCBQueue
 from proc.Processor import Processor
@@ -21,7 +21,7 @@ class MainMemory:
                 'memory_PCB': memoryBlock[0],
                 'start': memoryBlock[1],
                 'length': memoryBlock[2],
-                'memory_state': memoryBlock[3].name,
+                'memory_state': MemoryBlockStateDict[memoryBlock[3].name],
             })
         return {'main_memory': jsonList}
 

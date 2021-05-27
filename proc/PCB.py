@@ -1,4 +1,4 @@
-from proc.EnumClass import PCBState, Property
+from proc.EnumClass import PCBState, Property, PCBStateDict, PropertyDict
 
 
 class PCB:
@@ -20,8 +20,8 @@ class PCB:
             'time': self.__time,
             'ram': self.__ram,
             'priority': self.__priority,
-            'state': self.__state.name,
-            'property': self.__prop.name,
+            'state': PCBStateDict[self.__state.name],
+            'property': PropertyDict[self.__prop.name],
             'precursor': list(self.__precursor),
             'successor': list(self.__successor)
         }
