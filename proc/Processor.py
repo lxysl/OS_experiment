@@ -23,6 +23,7 @@ class Processor:
 
     def process(self, pcb_queue: PCBQueue):
         # 每个处理机执行一个单位时间的进程任务，更新每个处理机的进程所需时间
+        current_exits = []
         for i in range(self.__processorNum):
             if l := self.__processorPCBList[i]:
                 pcb_to_process = pcb_queue.getPCBByPID(l[0])
@@ -34,8 +35,11 @@ class Processor:
                     preExitList = [pcb_queue.getPCBByPID(i).getState() == PCBState.EXIT for i in precursorList]
                     if sum(preExitList) != len(preExitList):
                         continue  # preExitList中不全部为True，前驱进程未全部完成
+                    if current_exits != [] and [i for i in current_exits if i in precursorList] != []:
+                        continue  # 其前驱进程刚在本次运行的不同处理机中结束
                 if pcb_queue.getPCBByPID(l[0]).process():
-                    l.pop(0)
+                    exit_pid = l.pop(0)
+                    current_exits.append(exit_pid)
 
     def removePCB(self, pcb: PCB):
         location = (0, 0)
