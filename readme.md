@@ -6,7 +6,7 @@
 
 本程序模拟实现处理机调度和内存分配及回收机制，并通过可视化界面观察进程的运行流程与情况。为了实现算法与界面的解耦合，以及绘制更加优美的界面，本实验设计了前后端分离的架构，在后端使用Python的Flask框架实现相关算法并设计通信接口，在前端使用Vue.js框架及Element UI实现可视化界面，前后端通过Axios框架进行通信。
 
-**本仓库为后端实现代码，前端可视化实现请前往仓库[操作系统课程设计Vue前端](https://github.com/lxy764139720/os_experiment_vue)**
+**本仓库为后端实现代码，前端可视化实现请前往仓库[操作系统课程设计Vue前端](https://github.com/lxysl/os_experiment_vue)**
 
 ---
 
@@ -47,7 +47,7 @@
 
 ### 1. clone前端仓库
 ```bash
-git clone https://github.com/lxy764139720/os_experiment_vue
+git clone https://github.com/lxysl/os_experiment_vue
 ```
 
 ### 2. 安装环境
